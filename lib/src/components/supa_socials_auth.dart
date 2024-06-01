@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -361,10 +360,10 @@ class _SupaSocialsAuthState extends State<SupaSocialsAuth> {
         }
 
         final authButtonStyle = ButtonStyle(
-          foregroundColor: WidgetStateProperty.all(foregroundColor),
-          backgroundColor: WidgetStateProperty.all(backgroundColor),
-          overlayColor: WidgetStateProperty.all(overlayColor),
-          iconColor: WidgetStateProperty.all(iconColor),
+          foregroundColor: MaterialStateProperty.all(foregroundColor),
+          backgroundColor: MaterialStateProperty.all(backgroundColor),
+          overlayColor: MaterialStateProperty.all(overlayColor),
+          iconColor: MaterialStateProperty.all(iconColor),
         );
 
         return Padding(
