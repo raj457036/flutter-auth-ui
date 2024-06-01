@@ -105,7 +105,14 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
           ),
           spacer(16),
           ElevatedButton(
-            child: Text(
+            child: isLoading ? SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 1.5,
+                        ),
+                      ) : Text(
               localization.updatePassword,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
