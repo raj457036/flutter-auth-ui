@@ -60,8 +60,8 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
       setLoading(false);
       widget.onSuccess.call(response);
       // FIX use_build_context_synchronously
-      if (!context.mounted) return;
-      context.showSnackBar(localization.passwordResetSent);
+      if (context.mounted) return;
+      context.showSnackBar(widget.localization.passwordResetSent);
     } on AuthException catch (error) {
       if (widget.onError == null && context.mounted) {
         context.showErrorSnackBar(error.message);
@@ -71,7 +71,7 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
     } catch (error) {
       if (widget.onError == null && context.mounted) {
         context.showErrorSnackBar(
-            '${localization.passwordLengthError}: $error');
+            '${widget.localization.passwordLengthError}: $error');
       } else {
         widget.onError?.call(error);
       }
@@ -101,22 +101,24 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
             ),
             enabled: !isLoading,
             controller: _password,
-            onSubmit: submit,
+            onFieldSubmitted: (_) => submit(),
           ),
           spacer(16),
           ElevatedButton(
-            child: isLoading ? SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 1.5,
-                        ),
-                      ) : Text(
-              localization.updatePassword,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
             onPressed: isLoading ? null : submit,
+            child: isLoading
+                ? SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      strokeWidth: 1.5,
+                    ),
+                  )
+                : Text(
+                    localization.updatePassword,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
           ),
           spacer(10),
         ],
