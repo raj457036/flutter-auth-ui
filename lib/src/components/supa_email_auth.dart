@@ -203,6 +203,52 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                         ])
                     .expand((element) => element),
               ElevatedButton(
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return;
+                        }
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        try {
+                          if (_isSigningIn) {
+                            final response =
+                                await supabase.auth.signInWithPassword(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text.trim(),
+                            );
+                            widget.onSignInComplete.call(response);
+                          } else {
+                            final response = await supabase.auth.signUp(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text.trim(),
+                              emailRedirectTo: widget.redirectTo,
+                              data: _resolveData(),
+                            );
+                            widget.onSignUpComplete.call(response);
+                          }
+                        } on AuthException catch (error) {
+                          if (widget.onError == null && context.mounted) {
+                            context.showErrorSnackBar(error.message);
+                          } else {
+                            widget.onError?.call(error);
+                          }
+                        } catch (error) {
+                          if (widget.onError == null && context.mounted) {
+                            context.showErrorSnackBar(
+                                '${localization.unexpectedError}: $error');
+                          } else {
+                            widget.onError?.call(error);
+                          }
+                        }
+                        if (mounted) {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
+                      },
                 child: (_isLoading)
                     ? SizedBox(
                         height: 16,
@@ -215,69 +261,30 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                     : Text(_isSigningIn
                         ? localization.signIn
                         : localization.signUp),
-                onPressed: () async {
-                  if (!_formKey.currentState!.validate()) {
-                    return;
-                  }
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  try {
-                    if (_isSigningIn) {
-                      final response = await supabase.auth.signInWithPassword(
-                        email: _emailController.text.trim(),
-                        password: _passwordController.text.trim(),
-                      );
-                      widget.onSignInComplete.call(response);
-                    } else {
-                      final response = await supabase.auth.signUp(
-                        email: _emailController.text.trim(),
-                        password: _passwordController.text.trim(),
-                        emailRedirectTo: widget.redirectTo,
-                        data: _resolveData(),
-                      );
-                      widget.onSignUpComplete.call(response);
-                    }
-                  } on AuthException catch (error) {
-                    if (widget.onError == null && context.mounted) {
-                      context.showErrorSnackBar(error.message);
-                    } else {
-                      widget.onError?.call(error);
-                    }
-                  } catch (error) {
-                    if (widget.onError == null && context.mounted) {
-                      context.showErrorSnackBar(
-                          '${localization.unexpectedError}: $error');
-                    } else {
-                      widget.onError?.call(error);
-                    }
-                  }
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  }
-                },
               ),
               spacer(16),
               if (_isSigningIn) ...[
                 TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _forgotPassword = true;
-                    });
-                  },
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _forgotPassword = true;
+                          });
+                        },
                   child: Text(localization.forgotPassword),
                 ),
               ],
               TextButton(
                 key: const ValueKey('toggleSignInButton'),
-                onPressed: () {
-                  setState(() {
-                    _forgotPassword = false;
-                    _isSigningIn = !_isSigningIn;
-                  });
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        setState(() {
+                          _forgotPassword = false;
+                          _isSigningIn = !_isSigningIn;
+                        });
+                      },
                 child: Text(_isSigningIn
                     ? localization.dontHaveAccount
                     : localization.haveAccount),
@@ -286,48 +293,61 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
             if (_isSigningIn && _forgotPassword) ...[
               spacer(16),
               ElevatedButton(
-                onPressed: () async {
-                  try {
-                    if (!_formKey.currentState!.validate()) {
-                      return;
-                    }
-                    setState(() {
-                      _isLoading = true;
-                    });
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        try {
+                          if (!_formKey.currentState!.validate()) {
+                            return;
+                          }
+                          setState(() {
+                            _isLoading = true;
+                          });
 
-                    final email = _emailController.text.trim();
-                    await supabase.auth.resetPasswordForEmail(
-                      email,
-                      redirectTo: widget.redirectTo,
-                    );
-                    widget.onPasswordResetEmailSent?.call();
-                    // FIX use_build_context_synchronously
-                    if (!context.mounted) return;
-                    context.showSnackBar(localization.passwordResetSent);
-                    setState(() {
-                      _forgotPassword = false;
-                    });
-                  } on AuthException catch (error) {
-                    widget.onError?.call(error);
-                  } catch (error) {
-                    widget.onError?.call(error);
-                  } finally {
-                    if (mounted) {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                    }
-                  }
-                },
-                child: Text(localization.sendPasswordReset),
+                          final email = _emailController.text.trim();
+                          await supabase.auth.resetPasswordForEmail(
+                            email,
+                            redirectTo: widget.redirectTo,
+                          );
+                          widget.onPasswordResetEmailSent?.call();
+                          // FIX use_build_context_synchronously
+                          if (!context.mounted) return;
+                          context.showSnackBar(localization.passwordResetSent);
+                          setState(() {
+                            _forgotPassword = false;
+                          });
+                        } on AuthException catch (error) {
+                          widget.onError?.call(error);
+                        } catch (error) {
+                          widget.onError?.call(error);
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
+                      },
+                child: _isLoading
+                    ? SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 1.5,
+                        ),
+                      )
+                    : Text(localization.sendPasswordReset),
               ),
               spacer(16),
               TextButton(
-                onPressed: () {
-                  setState(() {
-                    _forgotPassword = false;
-                  });
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        setState(() {
+                          _forgotPassword = false;
+                        });
+                      },
                 child: Text(localization.backToSignIn),
               ),
             ],
