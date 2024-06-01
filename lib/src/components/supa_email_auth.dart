@@ -152,6 +152,7 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                 }
                 return null;
               },
+              enabled: !_isLoading,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.email),
                 label: Text(localization.enterEmail),
@@ -173,6 +174,7 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                   }
                   return null;
                 },
+                enabled: !_isLoading,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.lock),
                   label: Text(localization.enterPassword),
@@ -194,6 +196,7 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                               label: Text(metadataField.label),
                               prefixIcon: metadataField.prefixIcon,
                             ),
+                            enabled: !_isLoading,
                             validator: metadataField.validator,
                           ),
                           spacer(16),
