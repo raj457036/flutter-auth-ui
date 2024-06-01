@@ -32,11 +32,51 @@ class SupaResetPassword extends StatefulWidget {
 class _SupaResetPasswordState extends State<SupaResetPassword> {
   final _formKey = GlobalKey<FormState>();
   final _password = TextEditingController();
+  bool isLoading = false;
 
   @override
   void dispose() {
     _password.dispose();
     super.dispose();
+  }
+
+  void setLoading(bool value) {
+    setState(() {
+      isLoading = value;
+    });
+  }
+
+  Future<void> submit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    try {
+      setLoading(true);
+      final response = await supabase.auth.updateUser(
+        UserAttributes(
+          password: _password.text,
+        ),
+      );
+      setLoading(false);
+      widget.onSuccess.call(response);
+      // FIX use_build_context_synchronously
+      if (!context.mounted) return;
+      context.showSnackBar(localization.passwordResetSent);
+    } on AuthException catch (error) {
+      if (widget.onError == null && context.mounted) {
+        context.showErrorSnackBar(error.message);
+      } else {
+        widget.onError?.call(error);
+      }
+    } catch (error) {
+      if (widget.onError == null && context.mounted) {
+        context.showErrorSnackBar(
+            '${localization.passwordLengthError}: $error');
+      } else {
+        widget.onError?.call(error);
+      }
+    }
+    setLoading(false);
   }
 
   @override
@@ -59,7 +99,9 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
               prefixIcon: const Icon(Icons.lock),
               label: Text(localization.enterPassword),
             ),
+            enabled: !isLoading,
             controller: _password,
+            onSubmit: submit,
           ),
           spacer(16),
           ElevatedButton(
@@ -67,35 +109,7 @@ class _SupaResetPasswordState extends State<SupaResetPassword> {
               localization.updatePassword,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            onPressed: () async {
-              if (!_formKey.currentState!.validate()) {
-                return;
-              }
-              try {
-                final response = await supabase.auth.updateUser(
-                  UserAttributes(
-                    password: _password.text,
-                  ),
-                );
-                widget.onSuccess.call(response);
-                // FIX use_build_context_synchronously
-                if (!context.mounted) return;
-                context.showSnackBar(localization.passwordResetSent);
-              } on AuthException catch (error) {
-                if (widget.onError == null && context.mounted) {
-                  context.showErrorSnackBar(error.message);
-                } else {
-                  widget.onError?.call(error);
-                }
-              } catch (error) {
-                if (widget.onError == null && context.mounted) {
-                  context.showErrorSnackBar(
-                      '${localization.passwordLengthError}: $error');
-                } else {
-                  widget.onError?.call(error);
-                }
-              }
-            },
+            onPressed: isLoading ? null : submit,
           ),
           spacer(10),
         ],
